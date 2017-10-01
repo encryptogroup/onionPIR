@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<!--
+  PIRchat - A web based chat client for onionpir
+  Copyright (C) 2014 PIRchat authors and contributers
+
+  This file is part of PIRchat.
+
+  PIRchat is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  PIRchat is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with PIRchat.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<html lang="en" ng-app="pirchat" ng-controller="pirchatCtrl" class="ng-cloak">
+
+<head>
+  <title>PIRchat</title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" href="img/favicon.png">
+  <link rel="shortcut icon" href="img/favicon.ico">
+  <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="app.css">
+</head>
+
+<body>
+
+  <!-- Sidebar -->
+  <div id="profile-card">
+    <div id="profile-card-status-dropdown" class="dropdown">
+      <button href="#" class="btn dropdown-toggle" data-toggle="dropdown" id="profile-card-status-button">
+        <img ng-show="profile.status == 'NONE'" src="img/toxui/dot_online.png" alt="Online">
+        <img ng-show="profile.status == 'AWAY'" src="img/toxui/dot_away.png" alt="Away">
+        <img ng-show="profile.status == 'BUSY'" src="img/toxui/dot_busy.png" alt="Busy">
+        <!--<img ng-show="profile.status == 'INVI'" src="img/toxui/dot_invisible.png" alt="Invisible">-->
+      </button>
+
+      <ul class="dropdown-menu dropdown-menu-right">
+        <li>
+          <a href="#" ng-click="setUserStatus('NONE')">
+            <img src="img/toxui/dot_online.png">&emsp;
+            <span translate>Online</span>
+          </a>
+        </li>
+        <li>
+          <a href="#" ng-click="setUserStatus('AWAY')">
+            <img src="img/toxui/dot_away.png">&emsp;
+            <span translate>Away</span>
+          </a>
+        </li>
+        <li>
+          <a href="#" ng-click="setUserStatus('BUSY')">
+            <img src="img/toxui/dot_busy.png">&emsp;
+            <span translate>Busy</span>
+          </a>
+        </li>
+        <!--<li><a href="#" ng-click=""><img src="img/toxui/dot_invisible.png">&emsp;<span translate>Invisible</span></a></li>-->
+        <li class="divider"></li>
+        <li>
+          <a ng-click="goFullscreen()" href="#">
+            <span class="glyphicon glyphicon-fullscreen"></span>&emsp;
+            <span translate>Fullscreen</span>
+          </a>
+        </li>
+        <li>
+          <a ng-click="showSettings()" href="#">
+            <span class="glyphicon glyphicon-cog"></span>&emsp;
+            <span translate>Settings</span>
+          </a>
+        </li>
+        <li>
+          <a data-toggle="modal" href="#modal-about">
+            <span class="glyphicon glyphicon-leaf"></span>&emsp;
+            <span translate>About</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <img id="profile-card-picture" src="img/toxui/blankavatar.png" alt="Profile picture" class="avatar">
+    <input type="text" id="profile-card-username" ng-model="profile.username" ng-blur="setUsername(profile.username)">
+    <input type="text" id="profile-card-status-msg" ng-model="profile.status_msg" ng-blur="setStatusMsg(profile.status_msg)">
+  </div>
+
+  <div id="contact-list-wrapper">
+    <div id="contact-list">
+      <select id="contact-list-status-select" ng-model="onlyShowOnlineContacts">
+        <option value="">All</option>
+        <option value="1">Online</option>
+      </select>
+      <button class="btn btn-toxgreen inline-button" ng-show="friendRequests.length == 1" data-toggle="modal" href="#modal-friend-requests">1 Friend Request</button>
+      <button class="btn btn-toxgreen inline-button" ng-show="friendRequests.length >= 2" data-toggle="modal" href="#modal-friend-requests">{{ friendRequests.length }} Friend Requests</button>
+      <a href="#" class="contact" ng-class="{active: contacts[activecontactindex] == contact}" ng-repeat="contact in contacts | orderBy:'online':true" ng-click="showChat(contact.id); scrollLeft();" ng-show="!onlyShowOnlineContacts || contact.online">
+        <img class="contact-status-icon" ng-show="contact.online && (contact.chat.length == 0 || contact.last_msg_read >= contact.chat[0].time)" alt="Online"  src="img/toxui/dot_online.png">
+        <img class="contact-status-icon" ng-show="contact.online && contact.last_msg_read < contact.chat[0].time" alt="Online"  src="img/toxui/dot_online_notification.png">
+        <img class="contact-status-icon" ng-show="!contact.online && (contact.chat.length == 0 || contact.last_msg_read >= contact.chat[0].time)" alt="Offline" src="img/toxui/dot_offline.png">
+        <img class="contact-status-icon" ng-show="!contact.online && contact.last_msg_read < contact.chat[0].time"                                                           alt="Offline" src="img/toxui/dot_offline_notification.png">
+        <img class="contact-avatar avatar" ng-src="avatars/{{contact.publicKey}}.png?{{curDate}}" onerror="this.src = 'img/toxui/blankavatar.png';" alt="avatar">
+        <div class="contact-name">{{contact.name.length ? contact.name : "[Name not set]"}}</div>
+        <div class="contact-status-msg">{{contact.status_msg.length ? contact.status_msg : '&nbsp;'}}</div>
+      </a>
+    </div>
+  </div>
+
+  <div id="button-panel">
+    <button data-toggle="modal" href="#modal-friend-requests" title="Add contact">
+      <img src="img/toxui/add.png" alt="Add contact">
+    </button>
+    <button ng-click="showDemo()" title="Demo">
+      <img src="img/toxui/transfer.png" alt="Demo">
+    </button>
+    <button ng-click="showSettings()" title="Settings">
+      <img src="img/toxui/settings.png" alt="Settings">
+    </button>
+  </div>
+  <!-- END OF Sidebar -->
+
+  <!-- Main View -->
+  <div id="mainview">
+    <!-- Welcome -->
+    <div id="mainview-welcome" ng-show="active_mainview === 'welcome'">
+      <h1>PIRchat</h1>
+      <p>
+        <strong style="color: #c84e4e;">Warning: This code is <b>not</b> meant to be used in a productive environment and is intended for testing and demonstration purposes only.</strong>
+      </p>
+      <p>Nowadays many chat protocols protect the contents of your communication. PIRchat goes beyond that and also protects the metadata you're producing.</p>
+    </div>
+
+    <!-- Chat -->
+    <div id="mainview-chat" ng-show="active_mainview === 'chat'">
+      <div id="mainview-chat-header">
+        <div id="profile-card-back-button" class="btn btn-toxgreen">&lt;</div>
+        <img src="img/toxui/blankavatar.png" alt="avatar" class="avatar">
+        <div id="mainview-chat-header-username">{{contacts[activecontactindex].name}}</div>
+        <div id="mainview-chat-header-status-msg">{{contacts[activecontactindex].status_msg}}</div>
+      </div>
+      <div id="mainview-chat-body">
+        <div ng-repeat="chat in contacts[activecontactindex].chat.slice().reverse()" ng-class="{messageself: !chat.isIncoming}">
+          <span class="chatname" ng-if="!chat.isIncoming">{{profile.username}}</span>
+          <span class="chatname" ng-if="chat.isIncoming">{{contacts[activecontactindex].name}}</span>
+          <span class="chatmsg">{{chat.message}}</span>
+          <span class="timestamp">{{chat.time | date : 'H:mm:ss'}}</span>
+        </div>
+      </div>
+      <div id="mainview-chat-footer">
+        <div id="mainview-chat-footer-textarea-wrapper">
+          <textarea ng-model="messagetosend"></textarea>
+        </div>
+        <div id="mainview-chat-footer-buttons-wrapper">
+          <button id="mainview-chat-footer-button-send" class="btn btn-toxgreen" ng-click="sendMessage()">
+            <img src="img/toxui/sendmessage.png" alt="Send">
+          </button>
+          <button id="mainview-chat-footer-button-emoticon" class="btn btn-toxgreen" ng-click="notImplemented()">
+            <img src="img/toxui/emoticon.png" alt=":-)">
+          </button>
+          <button id="mainview-chat-footer-button-attach" class="btn btn-toxgreen" ng-click="notImplemented()">
+            <img src="img/toxui/attach.png" alt="#">
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div id="mainview-settings" ng-show="active_mainview === 'settings'">
+      <h1>Settings</h1>
+      <hr>
+
+      <h4>General</h4>
+      <div class="form-horizontal">
+        <div class="form-group">
+          <div class="col-sm-offset-3 col-sm-3">
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" id="checkbox-notifications" ng-model="settings.notifications_enabled"> Show notifications</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Technical info -->
+    <div id="mainview-demonstrator" ng-show="active_mainview === 'demo'">
+      <h1>Protocol insights</h1>
+      <hr>
+      <button class="btn btn-toxgreen" ng-click="doPIRrequest()">
+        Query for public keys via PIR now
+      </button>
+
+
+      <div class="contact">
+        <table>
+          <tr><td style="min-width: 12em;">Own Identifier</td><td>{{profile.own_mail}}</td></tr>
+          <tr><td>Own PublicKey</td><td>{{profile.own_pk}}</td></tr>
+        </table>
+      </div>
+
+      <hr>
+
+      <div class="contact" ng-repeat="contact in contacts | orderBy:'mail':true">
+        <table>
+          <tr><td style="min-width: 12em;">Identifier </td><td>{{contact.id}}</td></tr>
+          <tr><td>Name </td><td>{{contact.name.length ? contact.name : "[Name not set]"}}</td></tr>
+          <tr><td>Status Message </td><td>{{contact.status_msg.length ? contact.status_msg : '-'}}</td></tr>
+          <tr><td>PublicKey </td><td>{{contact.pk}}</td></tr>
+          <tr><td>Dead drop (incoming)</td><td>{{contact.ddin}}</td></tr>
+          <tr><td>Next renewal (incoming)</td><td>{{contact.ddin_time}}</td></tr>
+          <tr><td>Dead drop (outgoing)</td><td>{{contact.ddout}}</td></tr>
+          <tr><td>Next renewal (outgoing)</td><td>{{contact.ddout_time}}</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <!-- END OF Main View -->
+
+  <!-- Friend request modal -->
+  <div class="modal info fade" id="modal-friend-requests" tabindex="-1" role="dialog" aria-labelledby="modal-friend-requests-title" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="modal-friend-requests-title">Friend requests</h4>
+        </div>
+        <div class="modal-body">
+          <h3>Send a friend request</h3>
+          <form role="form" action="#" ng-submit="sendFriendRequest(new_friend_request.friend_id)">
+            <div class="form-group input-group">
+              <span class="input-group-addon">@</span>
+              <input type="text" class="form-control" ng-model="new_friend_request.friend_id" placeholder="Please enter your friends mail address.">
+            </div>
+            <div class="form-group clearfix">
+              <input type="submit" class="btn btn-toxgreen pull-right">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">
+            <span class="glyphicon glyphicon-remove"></span>
+            <span>Close</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete friend modal -->
+  <div class="modal warning fade" id="modal-friend-del" tabindex="-1" role="dialog" aria-labelledby="modal-friend-del-title" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="modal-friend-del-title">Remove friend?</h4>
+        </div>
+        <div class="modal-body">
+          <p>Do you really want to delete this contact?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default btn-sm" ng-click="deleteFriend(contacts[activecontactindex].number)">
+            <span class="glyphicon glyphicon-ok"></span>
+            <span>Yes</span>
+          </button>
+          <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">
+            <span class="glyphicon glyphicon-remove"></span>
+            <span>No</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- About modal -->
+  <div class="modal info fade" id="modal-about" tabindex="-1" role="dialog" aria-labelledby="modal-about-title" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="modal-about-title">About</h4>
+        </div>
+        <div class="modal-body">
+          <h1 class="text-center">
+            <img alt="PIR chat" title="PIRchat" src="img/logo-with-text-512.png" style="max-width: 100%;">
+          </h1>
+          <h1 class="text-center">
+            <small>0.0.1</small>
+          </h1>
+          <hr/>
+          <p translate>Copyright &copy; 2016 PIRchat authors and contributors</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">
+            <span class="glyphicon glyphicon-remove"></span>
+            <span>Close</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connection error modal -->
+  <div class="modal error fade" id="modal-connection-error" tabindex="-1" role="dialog" aria-labelledby="modal-connection-error-title" aria-hidden="true" data-keyboard="false" data-backdrop="static">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="modal-connection-error-title">Connection error</h4>
+        </div>
+        <div class="modal-body">
+          <p>PIRchat is currently not connected to your client.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="angular/angular.min.js"></script>
+  <script src="jquery/jquery-1.11.1.min.js"></script>
+  <script src="bootstrap/js/bootstrap.min.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/fullscreen.js"></script>
+  <script src="js/notifications.js"></script>
+  <script src="js/ws.js"></script>
+</body>
+
+</html>

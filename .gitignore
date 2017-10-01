@@ -1,0 +1,9 @@
+client*.yaml
+tor_data_dir_*/
+server_manifest.raw
+server.secret
+mirror0-files/
+mirror1-files/
+storage/*
+raidpir/*
+*.pyc

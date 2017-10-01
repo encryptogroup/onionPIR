@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PIR-Chat</title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" href="img/favicon.png">
+  <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body class="registration">
+  <div class="container">
+    <h1>Registration</h1>
+    <section>
+      <p>Please enter your mail address to create a new account</p>
+      <form id="registration-mail-form">
+        <input id="registration-mail" type="email">
+        <input type="submit" value="Register">
+      </form>
+    </section>
+    <section id="section-registration-token" class="initiallyhidden">
+      <p>Please enter your token you received via mail</p>
+      <form id="registration-token-form">
+        <input id="registration-token" type="text" size="24">
+        <input type="submit" value="Verify">
+      </form>
+    </section>
+    <button onclick="$('#log').show(); $(this).hide()" style="margin-top: 5em;">Demonstrator mode</button>
+  </div>
+
+  <div class="container" id="log">
+    <p>Client initialized...</p>
+  </div>
+
+  <script src="jquery/jquery-1.11.1.min.js"></script>
+  <script src="js/register.js"></script>
+
+</body>
+</html>
