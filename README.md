@@ -97,13 +97,16 @@ Starting the webserver...
 [15/Oct/2016:13:54:33] ENGINE Bus STARTED
 ```
 
+Warning: Next to the given port for the web server, also the succeeding port is
+used for websocket connections!
+
 Optionally, for testing purposes only, onion routing can be disabled by using
 the commandline parameter `--disable-onion-routing`.
 
 In order to chat with two different clients, please start another instance:
 
 ```
-onionpir> ./onionpir_client.py --config client2.yaml --port 8081 --server_pk c7d46db8ec95178d0f7729ccfd2e265067712eb657dadc61fe25b8a07e826920 --reg_port 8900 --reg_host 123.45.67.89
+onionpir> ./onionpir_client.py --config client2.yaml --port 8082 --server_pk c7d46db8ec95178d0f7729ccfd2e265067712eb657dadc61fe25b8a07e826920 --reg_port 8900 --reg_host 123.45.67.89
 Tor is already running...
 Registration server: onionpir://localhost:8900
 Starting the webserver...

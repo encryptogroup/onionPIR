@@ -1,4 +1,5 @@
 #!/usr/bin/env python2
+import cherrypy
 import nacl.utils
 from nacl.public import PrivateKey, PublicKey, Box
 import sys
@@ -13,15 +14,15 @@ from stem.control import Controller
 from stem.util import term
 import threading
 import time
+from websocket_server import WebsocketServer
 import yaml
-
-import cherrypy
-from ws4py.server.cherrypyserver import WebSocketPlugin, WebSocketTool
-from ws4py.websocket import WebSocket
-from ws4py.messaging import TextMessage
 
 config = dict()
 config_file = None
+
+class WebsocketServerWrapper():
+    server = None
+websocket = WebsocketServerWrapper()
 
 def parse_options():
     """Parses command line arguments and return a dict containing all relevant
@@ -84,7 +85,7 @@ class Contact:
 class WebRoot():
     @cherrypy.expose
     def index(self):
-        cherrypy.engine.publish('websocket-broadcast', TextMessage('{"type": "profile_update"}'))
+        websocket.server.send_message_to_all('{"type": "profile_update"}')
         if config['registration_successful']:
             raise cherrypy.HTTPRedirect('/chat.html')
         else:
@@ -159,8 +160,8 @@ class WebAPIget():
 
         do_PIR_requests()
 
-        cherrypy.engine.publish('websocket-broadcast', TextMessage('{"type": "friendlist_update"}'))
-        cherrypy.engine.publish('websocket-broadcast', TextMessage('{"type": "profile_update"}'))
+        websocket.server.send_message_to_all('{"type": "friendlist_update"}')
+        websocket.server.send_message_to_all('{"type": "profile_update"}')
 
 def retrieve_messages():
     global config
@@ -173,10 +174,10 @@ def retrieve_messages():
             if contact.mail == m[0]:
                 if m[1].startswith("UPDATEUSERNAME: "):
                     contact.name = m[1][len('UPDATEUSERNAME: '):]
-                    cherrypy.engine.publish('websocket-broadcast', TextMessage('{"type": "friendlist_update"}'))
+                    websocket.server.send_message_to_all('{"type": "friendlist_update"}')
                 elif m[1].startswith("UPDATESTATUSMSG: "):
                     contact.status_msg = m[1][len('UPDATESTATUSMSG: '):]
-                    cherrypy.engine.publish('websocket-broadcast', TextMessage('{"type": "friendlist_update"}'))
+                    websocket.server.send_message_to_all('{"type": "friendlist_update"}')
                 else:
                     message = dict()
                     message["isIncoming"] = True
@@ -185,7 +186,7 @@ def retrieve_messages():
                     message["time"] = time.time()*1000
                     contact.chat.insert(0, message)
                     message["friend"] = contact.mail
-                    cherrypy.engine.publish('websocket-broadcast', TextMessage('{"type": "friend_message", "data": '+json.dumps(message)+'}'))
+                    websocket.server.send_message_to_all('{"type": "friend_message", "data": '+json.dumps(message)+'}')
 
     save_config_file(config)
 
@@ -334,8 +335,6 @@ class SendMessage():
         if not contact_found:
             return '{"status": "failure", "reason": "Contact not found."}'
 
-class WebSocketHandler(WebSocket):
-    pass
 
 def read_config_file(commandlineoptions=None):
     global config_file
@@ -463,12 +462,15 @@ def main():
 
 
     print "[INFO] Starting the webserver... http://127.0.0.1:" + str(commandlineoptions.port) + "/"
+    #class WSThread(threading.Thread):
+    #    def run(self):
+    #        websocket.server.run_forever()
+    #WSThread().start()
+
+    # CherryPy
     script_dir = os.path.dirname(os.path.realpath(__file__))
     serve_dir = os.path.abspath(os.path.normpath(
         script_dir + '/' + HTTP_STATIC_DIR))
-
-    WebSocketPlugin(cherrypy.engine).subscribe()
-    cherrypy.tools.websocket = WebSocketTool()
 
     cherrypy.tree.mount(RequestToken(), '/api/register/request_token', {
         '/': { 'request.dispatch': cherrypy.dispatch.MethodDispatcher() }
@@ -503,11 +505,7 @@ def main():
                 ('X-XSS-Protection', '1; mode=block'),
                 ('X-Content-Type-Options', 'nosniff')
             ]
-        },
-        '/ws': {
-            'tools.websocket.on': True,
-            'tools.websocket.handler_cls': WebSocketHandler
-        },
+        }
     })
 
     # comment the following line to show logs from the webserver
@@ -515,7 +513,13 @@ def main():
 
     cherrypy.config.update({'server.socket_port': commandlineoptions.port})
     cherrypy.engine.start()
-    cherrypy.engine.block()
+
+    # WebSocket
+    websocket.server = WebsocketServer(commandlineoptions.port+1, host='0.0.0.0')
+    websocket.server.run_forever()
+
+    print('exiting...')
+    os.system('kill $PPID')
 
 if __name__ == '__main__':
     assert STORAGE_REGISTRATION_DIR[-1] == '/'

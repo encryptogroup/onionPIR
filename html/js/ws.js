@@ -11,7 +11,7 @@
       }
 
       console.log("Trying to connect to WebSocket server...");
-      var ws = new WebSocket("ws://" + location.host + "/ws");
+      var ws = new WebSocket("ws://" + location.hostname + ":" + (parseInt(location.port) + 1) + "/ws");
 
       ws.onopen = function() {
         if (typeof onopen === "function")

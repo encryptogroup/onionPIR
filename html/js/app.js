@@ -136,7 +136,7 @@
           $scope.contacts[$scope.activecontactindex].chat.unshift({
             "isIncoming": false,
             "isAction": false,
-            "message": $scope.messagetosend.replace(/\n/g, "<br>"),
+            "message": $scope.messagetosend,
             "time": Date.now()
           });
         }
