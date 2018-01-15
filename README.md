@@ -16,7 +16,7 @@ need to be installed on the host system:
 - [Tor](http://torproject.org/) `apt-get install tor `
 - [Stem](https://stem.torproject.org/) `pip install stem`
 - [CherryPy](http://cherrypy.org/) `pip install cherrypy`
-- [WebSocket for Python](https://github.com/Lawouach/WebSocket-for-Python) `pip install ws4py`
+- [python-websocket](https://github.com/Pithikos/python-websocket-server) `pip install websocket-server`
 
 ## Deployment
 OnionPIR comes with a number of scripts that can be used to simplify deployment.
