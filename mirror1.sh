@@ -4,7 +4,7 @@
 #echo \# be adjusted
 #exit 0
 
-mkdir mirror1-files
+mkdir -p mirror1-files
 cd ./raidpir/
 
 while true
