@@ -1,10 +1,10 @@
 # OnionPIR
 OnionPIR is an anonymous communication service that allows private communication
-without revealing the users social graphs to the server. OnionPIR is based on
-RAID-PIR and Tor and consists of the OnionPIR server, the servers from the
+without revealing the users' social graphs to the server. OnionPIR is based on
+[RAID-PIR](https://github.com/encryptogroup/RAID-PIR) and Tor and consists of the OnionPIR server, the servers from the
 RAID-PIR library and the OnionPIR client.
 
-**Warning:** This code is **not** meant to be used for a productive environment
+**Warning:** This code is **not** meant to be used in a productive environment
 and is intended for testing and demonstration purposes only.
 
 ![screenshot of OnionPIR](./storage/pir/onionpir_screenshot.png)
@@ -20,10 +20,10 @@ need to be installed on the host system:
 
 ## Deployment
 OnionPIR comes with a number of scripts that can be used to simplify deployment.
-It is assumed that RAID-PIR is placed under `./raidpir/`.
+It is assumed that [RAID-PIR](https://github.com/encryptogroup/RAID-PIR) is placed under `./raidpir/`.
 
 To have fast XOR operations, you'll need to build some C code. To do this you
-have to run `python setup.py build` from within the raidpir directory.
+have to run `python setup.py build` from within the `raidpir` directory.
 
 
 ### OnionPIR server
@@ -39,7 +39,7 @@ Server public key: 4de92f212b8bd70c89b6eeb74f8d0413982fb40e69d9502b35635c57e681d
 Starting server at 0.0.0.0:8900
 ```
 
-It is important that the OnionPIR is reachable via a public IP address, even in
+It is important that the OnionPIR server is reachable via a public IP address, even in
 a test scenario on a single machine because Tor nodes have to be able to
 establish a connection from outside the local network (unless disabling onion
 routing for testing purposes (see section 'OnionPIR client')).
@@ -76,11 +76,11 @@ Please proceed with the second RAID-PIR mirror (`mirror1.sh`) in the same way.
 ### OnionPIR client
 OnionPIR clients provide the user interface to the OnionPIR system. Here, we
 implemented the users interface as a web application. The OnionPIR client
-provides a REST API and also comminicates with the OnionPIR server and the
+provides a REST API and also communicates with the OnionPIR server and the
 RAID-PIR mirrors.
 
 A client may be stated by running `onionpir_client.py` where `--port` specifies
-the local port of the webserver serving the user interface, `--server_pk`
+the local port of the web server serving the user interface, `--server_pk`
 specifies the public key generated and shown by `onionpir_server.py` and
 `--reg_host`/`--reg_port` specify how to reach the OnionPIR server. The config
 file `client1.yaml` is used to read/store the login credentials of the client
@@ -97,11 +97,10 @@ Starting the webserver...
 [15/Oct/2016:13:54:33] ENGINE Bus STARTED
 ```
 
-Warning: Next to the given port for the web server, also the succeeding port is
-used for websocket connections!
+**Warning:** Next to the given port for the web server, also the succeeding port is used for websocket connections!
 
 Optionally, for testing purposes only, onion routing can be disabled by using
-the commandline parameter `--disable-onion-routing`.
+the command line parameter `--disable-onion-routing`.
 
 In order to chat with two different clients, please start another instance:
 
@@ -112,19 +111,19 @@ Registration server: onionpir://localhost:8900
 Starting the webserver...
 [15/Oct/2016:13:54:33] ENGINE Bus STARTING
 [15/Oct/2016:13:54:33] ENGINE Starting WebSocket processing
-[15/Oct/2016:13:54:33] ENGINE Serving on http://127.0.0.1:8081
+[15/Oct/2016:13:54:33] ENGINE Serving on http://127.0.0.1:8082
 [15/Oct/2016:13:54:33] ENGINE Bus STARTED
 ```
 
 ### Starting a conversation
 Once all services are running, the clients can be accessed via the URLs shown
 when executing `onionpir_client.py` (http://127.0.0.1:8080 and
-http://127.0.0.1:8081 in our case). On the registration page, arbitrary mail
+http://127.0.0.1:8082 in our case). On the registration page, arbitrary mail
 addresses can be used since for our demo application no real mails are sent.
 Instead, the tokens needed to complete the registration process are displayed by
 `onionpir_server.py` via standard output (stdout).
 
-After the registration process is completed for both accounts, mutally add the
+After the registration process is completed for both accounts, mutually add the
 users as friends of each other and start chatting.
 
 # License
