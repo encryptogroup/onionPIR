@@ -11,7 +11,7 @@ while true
 do
   # rsync -r server:/path/to/pirchat/storage/pir/ files/
   rsync -r ../storage/pir/ ../mirror0-files/
-  ./raidpir_mirror.py --files ../mirror0-files/ --port 8902 --precompute --retrievemanifestfrom 127.0.0.1:8901
+  ./raidpir_mirror.py --files ../mirror0-files/ --port 8902 --precompute --retrievemanifestfrom 127.0.0.1:8901 --ip 127.0.0.1
   if [ $? -ne 0 ]
   then
     exit
