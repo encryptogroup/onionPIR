@@ -3,6 +3,7 @@ OnionPIR is an anonymous communication service that allows private communication
 without revealing the users' social graphs to the server. OnionPIR is based on
 [RAID-PIR](https://github.com/encryptogroup/RAID-PIR) and Tor and consists of the OnionPIR server, the servers from the
 RAID-PIR library and the OnionPIR client.
+Our corresponding paper "[OnionPIR: Effective Protection of Sensitive Metadata in Online Communication Networks](https://encrypto.de/papers/DHS17.pdf)" by Daniel Demmler, Marco Holz and Thomas Schneider has been published at [ACNS 2017](https://cy2sec.comm.eng.osaka-u.ac.jp/acns2017/index.html).
 
 **Warning:** This code is **not** meant to be used in a productive environment
 and is intended for testing and demonstration purposes only.
